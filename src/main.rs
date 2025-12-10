@@ -18,6 +18,12 @@ fn main() {
 
                 match command {
                     "exit" => {exit(0)},
+                    "echo" => {
+                        for arg in command_parts {
+                            print!("{arg} ");
+                        }
+                        println!();
+                    }
                     _ => println!("{}: command not found", command)
                 }
                 
