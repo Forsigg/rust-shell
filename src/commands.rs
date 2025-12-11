@@ -40,7 +40,8 @@ fn type_(arg: &str) {
                 for p in path.split(":") {
                     let p_str = format!("{}/{}", p, arg);
                     if fs::metadata(&p_str).is_ok() {
-                        println!("{arg} is {p_str}")
+                        println!("{arg} is {p_str}");
+                        break;
                     }
                 }
             } else {
