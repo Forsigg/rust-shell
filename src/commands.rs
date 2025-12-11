@@ -1,4 +1,5 @@
 use std::process::exit;
+use std::{env, fs};
 
 pub enum ShellCommand {
     Exit,
@@ -23,7 +24,7 @@ pub fn handle_command(cmd: ShellCommand, args: Vec<&str>) {
     match cmd {
         ShellCommand::Exit => exit(0),
         ShellCommand::Echo => echo(args),
-        ShellCommand::Type => {type_(args[0])}
+        ShellCommand::Type => type_(args[0]),
     }
 }
 
@@ -36,7 +37,19 @@ fn echo(args: Vec<&str>) {
 
 fn type_(arg: &str) {
     match parse_command(arg) {
-        None => println!("{arg}: not found"),
-        Some(_) => println!("{arg} is a shell builtin")
+        Some(_) => println!("{arg} is a shell builtin"),
+
+        None => {
+            if let Ok(path) = env::var("PATH") {
+                for p in path.split(":") {
+                    let p_str = format!("{}/{}", p, arg);
+                    if fs::metadata(p_str).is_ok() {
+                        println!("{arg} is {p}")
+                    }
+                }
+            } else {
+                println!("{arg}: not found")
+            }
+        }
     }
 }

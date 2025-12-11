@@ -1,10 +1,8 @@
-#[allow(unused_imports)]
 use std::io::{self, Write};
 
 use crate::commands::{handle_command, parse_command};
 
 fn main() {
-    // TODO: Uncomment the code below to pass the first stage
     loop {
         print!("$ ");
         let stdin = io::stdin();
@@ -14,18 +12,14 @@ fn main() {
         let mut input = String::new();
         match stdin.read_line(&mut input) {
             Ok(_) => {
-                let mut command_parts = input.split_ascii_whitespace();
-                let command_str = command_parts.next().unwrap();
-                let mut args: Vec<&str> = vec![];
+                let command_parts: Vec<&str> = input.split_ascii_whitespace().collect();
+                let command = command_parts[0];
+                let args = command_parts[1..].into();
 
-                for arg in command_parts {
-                    args.push(arg);
-                }
-
-                if let Some(cmd) = parse_command(command_str) {
+                if let Some(cmd) = parse_command(command) {
                     handle_command(cmd, args);
                 } else {
-                    eprintln!("{command_str}: command not found")
+                    eprintln!("{command}: command not found")
                 }
             }
 
