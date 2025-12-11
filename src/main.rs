@@ -1,6 +1,7 @@
 #[allow(unused_imports)]
 use std::io::{self, Write};
-use std::process::exit;
+
+use crate::commands::{handle_command, parse_command};
 
 fn main() {
     // TODO: Uncomment the code below to pass the first stage
@@ -14,21 +15,23 @@ fn main() {
         match stdin.read_line(&mut input) {
             Ok(_) => {
                 let mut command_parts = input.split_ascii_whitespace();
-                let command = command_parts.next().unwrap();
+                let command_str = command_parts.next().unwrap();
+                let mut args: Vec<&str> = vec![];
 
-                match command {
-                    "exit" => {exit(0)},
-                    "echo" => {
-                        for arg in command_parts {
-                            print!("{arg} ");
-                        }
-                        println!();
-                    }
-                    _ => println!("{}: command not found", command)
+                for arg in command_parts {
+                    args.push(arg);
                 }
-                
+
+                if let Some(cmd) = parse_command(command_str) {
+                    handle_command(cmd, args);
+                } else {
+                    eprintln!("{command_str}: command not found")
+                }
             }
+
             Err(e) => println!("error: {e}"),
         }
     }
 }
+
+mod commands;
