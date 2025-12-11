@@ -7,10 +7,6 @@ pub enum ShellCommand {
     Type,
 }
 
-pub enum ShellError {
-    CommandNotFound,
-}
-
 pub fn parse_command(command_str: &str) -> Option<ShellCommand> {
     match command_str {
         "exit" => Some(ShellCommand::Exit),
@@ -43,8 +39,8 @@ fn type_(arg: &str) {
             if let Ok(path) = env::var("PATH") {
                 for p in path.split(":") {
                     let p_str = format!("{}/{}", p, arg);
-                    if fs::metadata(p_str).is_ok() {
-                        println!("{arg} is {p}/{arg}")
+                    if fs::metadata(&p_str).is_ok() {
+                        println!("{arg} is {p_str}")
                     }
                 }
             } else {
