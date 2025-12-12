@@ -1,7 +1,7 @@
 use core::fmt;
 use std::io::{self, Write};
 use std::os::unix::fs::PermissionsExt;
-use std::process::{Command, exit};
+use std::process::Command;
 use std::{env, fs};
 
 #[derive(Debug, Clone)]
@@ -22,51 +22,7 @@ impl fmt::Display for CommandNotFoundError {
     }
 }
 
-pub enum ShellCommand {
-    Exit,
-    Echo,
-    Type,
-}
-
-pub fn parse_command(command_str: &str) -> Option<ShellCommand> {
-    match command_str {
-        "exit" => Some(ShellCommand::Exit),
-        "echo" => Some(ShellCommand::Echo),
-        "type" => Some(ShellCommand::Type),
-        _ => None,
-    }
-}
-
-pub fn handle_command(cmd: ShellCommand, args: &[&str]) {
-    match cmd {
-        ShellCommand::Exit => exit(0),
-        ShellCommand::Echo => echo(args),
-        ShellCommand::Type => type_(args[0]),
-    }
-}
-
-fn echo(args: &[&str]) {
-    for &arg in args {
-        print!("{arg} ")
-    }
-    println!();
-}
-
-fn type_(arg: &str) {
-    match parse_command(arg) {
-        Some(_) => println!("{arg} is a shell builtin"),
-
-        None => {
-            if let Some(exec_path) = is_external_executable_exist(arg) {
-                println!("{arg} is {exec_path}");
-            } else {
-                println!("{arg}: not found");
-            }
-        }
-    }
-}
-
-fn is_external_executable_exist(program_name: &str) -> Option<String> {
+pub fn is_external_executable_exist(program_name: &str) -> Option<String> {
     if let Ok(path) = env::var("PATH") {
         for p in path.split(":") {
             let p_str = format!("{}/{}", p, program_name);

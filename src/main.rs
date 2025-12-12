@@ -1,6 +1,12 @@
 use std::io::{self, Write};
 
-use crate::commands::{execute_external, handle_command, parse_command};
+use crate::{
+    builtins::{handle_builtin_command, parse_builtin_command},
+    commands::execute_external,
+};
+
+pub mod builtins;
+pub mod commands;
 
 fn main() {
     loop {
@@ -16,8 +22,8 @@ fn main() {
                 let command = command_parts[0];
                 let args = &command_parts[1..];
 
-                if let Some(cmd) = parse_command(command) {
-                    handle_command(cmd, args);
+                if let Some(cmd) = parse_builtin_command(command) {
+                    handle_builtin_command(cmd, args);
                 } else if let Err(e) = execute_external(command, args) {
                     eprintln!("{e}")
                 }
@@ -27,5 +33,3 @@ fn main() {
         }
     }
 }
-
-mod commands;
