@@ -1,3 +1,4 @@
+use std::os::unix::fs::PermissionsExt;
 use std::process::exit;
 use std::{env, fs};
 
@@ -39,8 +40,14 @@ fn type_(arg: &str) {
             if let Ok(path) = env::var("PATH") {
                 for p in path.split(":") {
                     let p_str = format!("{}/{}", p, arg);
-                    if fs::metadata(&p_str).is_ok() {
-                        println!("{arg} is {p_str}");
+                    if let Ok(md) = fs::metadata(&p_str) {
+                        let permissions = md.permissions();
+                        if permissions.mode() & 0o111 != 0 {
+                            println!("{arg} is {p_str}");
+                            break;
+                        }
+                    } else {
+                        println!("{arg}: not found");
                         break;
                     }
                 }
