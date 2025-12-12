@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 
-use crate::commands::{handle_command, parse_command};
+use crate::commands::{execute_external, handle_command, parse_command};
 
 fn main() {
     loop {
@@ -14,12 +14,14 @@ fn main() {
             Ok(_) => {
                 let command_parts: Vec<&str> = input.split_ascii_whitespace().collect();
                 let command = command_parts[0];
-                let args = command_parts[1..].into();
+                let args = &command_parts[1..];
 
                 if let Some(cmd) = parse_command(command) {
                     handle_command(cmd, args);
-                } else {
-                    eprintln!("{command}: command not found")
+                } 
+
+                if let Err(e) = execute_external(command, args) {
+                    eprintln!("{e}")
                 }
             }
 
