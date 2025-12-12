@@ -18,9 +18,7 @@ fn main() {
 
                 if let Some(cmd) = parse_command(command) {
                     handle_command(cmd, args);
-                } 
-
-                if let Err(e) = execute_external(command, args) {
+                } else if let Err(e) = execute_external(command, args) {
                     eprintln!("{e}")
                 }
             }
