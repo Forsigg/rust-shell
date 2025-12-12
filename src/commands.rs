@@ -83,8 +83,8 @@ fn is_external_executable_exist(program_name: &str) -> Option<String> {
 
 pub fn execute_external(program_name: &str, args: &[&str]) -> Result<(), CommandNotFoundError> {
     match is_external_executable_exist(program_name) {
-        Some(path) => {
-            let mut command = Command::new(path);
+        Some(_) => {
+            let mut command = Command::new(program_name);
             for &arg in args {
                 command.arg(arg);
             }
