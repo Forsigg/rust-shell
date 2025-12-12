@@ -44,13 +44,12 @@ fn type_(arg: &str) {
                         let permissions = md.permissions();
                         if permissions.mode() & 0o111 != 0 {
                             println!("{arg} is {p_str}");
-                            break;
+                            return;
                         }
-                    } else {
-                        println!("{arg}: not found");
-                        break;
                     }
                 }
+
+                println!("{arg}: not found")
             } else {
                 println!("{arg}: not found")
             }
