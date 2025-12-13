@@ -26,35 +26,36 @@ pub fn parse_builtin_command(command_str: &str) -> Option<ShellCommand> {
     }
 }
 
-pub fn handle_builtin_command(cmd: ShellCommand, args: &[&str]) {
+pub fn handle_builtin_command(cmd: ShellCommand, args: &[&str]) -> Option<String> {
     match cmd {
         ShellCommand::Exit => exit(0),
-        ShellCommand::Echo => echo(args),
-        ShellCommand::Type => type_(args[0]),
-        ShellCommand::Pwd => pwd(),
+        ShellCommand::Echo => Some(echo(args)),
+        ShellCommand::Type => Some(type_(args[0])),
+        ShellCommand::Pwd => Some(pwd()),
         ShellCommand::Cd => cd(args[0].to_owned()),
     }
 }
 
-fn type_(arg: &str) {
+fn type_(arg: &str) -> String {
     match parse_builtin_command(arg) {
-        Some(_) => println!("{arg} is a shell builtin"),
+        Some(_) => format!("{arg} is a shell builtin"),
 
         None => {
             if let Some(exec_path) = is_external_executable_exist(arg) {
-                println!("{arg} is {exec_path}");
+                format!("{arg} is {exec_path}")
             } else {
-                println!("{arg}: not found");
+                format!("{arg}: not found")
             }
         }
     }
 }
 
-fn echo(args: &[&str]) {
-    for &arg in args {
-        print!("{arg} ")
+fn echo(args: &[&str]) -> String {
+    let mut output = String::new();
+    for arg in args {
+        output.push_str(&(format!("{} ", arg)));
     }
-    println!();
+    output
 }
 
 fn get_pwd() -> PathBuf {
@@ -62,32 +63,31 @@ fn get_pwd() -> PathBuf {
     fs::canonicalize(&pwd).unwrap()
 }
 
-fn pwd() {
+fn pwd() -> String {
     let absolute_pwd = get_pwd();
-    let pwd_str = absolute_pwd.to_str().unwrap();
-    println!("{pwd_str}");
+    absolute_pwd.to_str().unwrap().to_owned()
 }
 
-fn cd(mut new_dir: String) {
+fn cd(mut new_dir: String) -> Option<String> {
     if new_dir == "~" {
         new_dir = env::var("HOME").unwrap();
     }
-    
+
     let mut path = PathBuf::from(&new_dir);
 
     if !path.is_absolute() {
         path = match fs::canonicalize(path) {
             Ok(p) => p,
             Err(_) => {
-                eprintln!("cd: {}: No such file or directory", &new_dir);
-                return
+                return Some(format!("cd: {}: No such file or directory", &new_dir));
             }
         }
     }
 
     if path.exists() {
         let _ = set_current_dir(path);
+        None
     } else {
-        eprintln!("cd: {}: No such file or directory", &new_dir);
+        Some(format!("cd: {}: No such file or directory", &new_dir))
     }
 }

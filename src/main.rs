@@ -23,7 +23,12 @@ fn main() {
                 let args = &command_parts[1..];
 
                 if let Some(cmd) = parse_builtin_command(command) {
-                    handle_builtin_command(cmd, args);
+                    if let Some(output) = handle_builtin_command(cmd, args) {
+                        print!("{}", output);
+                        if !output.ends_with("\n") {
+                            println!();
+                        }
+                    }
                 } else if let Err(e) = execute_external(command, args) {
                     eprintln!("{e}")
                 }
