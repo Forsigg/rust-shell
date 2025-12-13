@@ -1,5 +1,5 @@
 use std::{
-    env::{current_dir, set_current_dir},
+    env::{self, current_dir, set_current_dir},
     fs,
     path::PathBuf,
     process::exit,
@@ -68,7 +68,11 @@ fn pwd() {
     println!("{pwd_str}");
 }
 
-fn cd(new_dir: String) {
+fn cd(mut new_dir: String) {
+    if new_dir == "~" {
+        new_dir = env::var("HOME").unwrap();
+    }
+    
     let mut path = PathBuf::from(&new_dir);
 
     if !path.is_absolute() {
