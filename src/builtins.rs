@@ -7,6 +7,7 @@ use std::{
 
 use crate::commands::is_external_executable_exist;
 
+/// Builtin commands
 pub enum ShellCommand {
     Exit,
     Echo,
@@ -15,6 +16,8 @@ pub enum ShellCommand {
     Cd,
 }
 
+/// Parse builtin command.
+/// If command not builtin - return None.
 pub fn parse_builtin_command(command_str: &str) -> Option<ShellCommand> {
     match command_str {
         "exit" => Some(ShellCommand::Exit),
@@ -26,6 +29,8 @@ pub fn parse_builtin_command(command_str: &str) -> Option<ShellCommand> {
     }
 }
 
+/// Handle builtin command.
+/// Dispatch builtin implementation by cmd enumeration.
 pub fn handle_builtin_command(cmd: ShellCommand, args: &[&str]) -> (String, String) {
     match cmd {
         ShellCommand::Exit => exit(0),
@@ -36,13 +41,14 @@ pub fn handle_builtin_command(cmd: ShellCommand, args: &[&str]) -> (String, Stri
     }
 }
 
+/// Implementation of `type` command builtin.
 fn type_(arg: &str) -> (String, String) {
     let mut out = String::new();
     let mut err = String::new();
     match parse_builtin_command(arg) {
         Some(_) => {
             out.push_str(&format!("{arg} is a shell builtin"));
-        },
+        }
         None => {
             if let Some(exec_path) = is_external_executable_exist(arg) {
                 out.push_str(&format!("{arg} is {exec_path}"));
@@ -55,6 +61,7 @@ fn type_(arg: &str) -> (String, String) {
     (out, err)
 }
 
+/// Implementation of `echo` command builtin.
 fn echo(args: &[&str]) -> (String, String) {
     let mut output = String::new();
     for arg in args {
@@ -63,16 +70,19 @@ fn echo(args: &[&str]) -> (String, String) {
     (output, String::from(""))
 }
 
-fn get_pwd() -> PathBuf {
+/// Get working directory.
+fn get_wd() -> PathBuf {
     let pwd = current_dir().unwrap();
     fs::canonicalize(&pwd).unwrap()
 }
 
+/// Implementation of `pwd` command builtin.
 fn pwd() -> (String, String) {
-    let absolute_pwd = get_pwd();
+    let absolute_pwd = get_wd();
     (absolute_pwd.to_str().unwrap().to_owned(), String::new())
 }
 
+/// Implementation of `cd` command builtin.
 fn cd(mut new_dir: String) -> (String, String) {
     let out = String::new();
     let mut err = String::new();
@@ -88,7 +98,7 @@ fn cd(mut new_dir: String) -> (String, String) {
             Ok(p) => p,
             Err(_) => {
                 err.push_str(&format!("cd: {}: No such file or directory", &new_dir));
-                return (out, err)
+                return (out, err);
             }
         }
     }

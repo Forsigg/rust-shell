@@ -21,6 +21,8 @@ impl fmt::Display for CommandNotFoundError {
     }
 }
 
+/// Chech is program_name is external executable exist. 
+/// If exist - return path to executable.
 pub fn is_external_executable_exist(program_name: &str) -> Option<String> {
     if let Ok(path) = env::var("PATH") {
         for p in path.split(":") {
@@ -36,6 +38,7 @@ pub fn is_external_executable_exist(program_name: &str) -> Option<String> {
     None
 }
 
+/// Execute external executable program.
 pub fn execute_external(
     program_name: &str,
     args: &[&str],
@@ -47,8 +50,6 @@ pub fn execute_external(
                 command.arg(arg);
             }
             let output = command.output().unwrap();
-            // let _ = io::stdout().write_all(&output.stdout);
-            // let _ = io::stderr().write_all(&output.stderr);
             Ok((
                 str::from_utf8(&output.stdout).unwrap().to_owned(),
                 str::from_utf8(&output.stderr).unwrap().to_owned(),

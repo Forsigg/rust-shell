@@ -6,11 +6,11 @@ pub enum RedirectType<'a> {
     Stdout(&'a [&'a str]),
     StdoutOne(&'a [&'a str]),
     StdErr(&'a [&'a str]),
-    // Append(&'a [&'a str]),
     AppendStdout(&'a [&'a str]),
     AppendStderr(&'a [&'a str]),
 }
 
+/// Handle output from commands (StdOut and StdErr).
 pub fn handle_output(output: String, output_err: String, redirect: RedirectType) {
     match redirect {
         RedirectType::None => {
@@ -18,8 +18,7 @@ pub fn handle_output(output: String, output_err: String, redirect: RedirectType)
             console_output(output_err);
         }
         RedirectType::Stdout(args) => {
-            let path_arg = String::from(args[0]);
-            let path = PathBuf::from(path_arg);
+            let path = PathBuf::from(String::from(args[0]));
             if output_err.is_empty() {
                 file_output(output, path, false)
             } else {
@@ -27,35 +26,22 @@ pub fn handle_output(output: String, output_err: String, redirect: RedirectType)
             }
         }
         RedirectType::StdoutOne(args) => {
-            let path_arg = String::from(args[0]);
-            let path = PathBuf::from(path_arg);
+            let path = PathBuf::from(String::from(args[0]));
             file_output(output, path, false);
             console_output(output_err);
         }
         RedirectType::StdErr(args) => {
-            let path_arg = String::from(args[0]);
-            let path = PathBuf::from(path_arg);
+            let path = PathBuf::from(String::from(args[0]));
             file_output(output_err, path, false);
             console_output(output);
         }
-        // RedirectType::Append(args) => {
-        //     let path_arg = String::from(args[0]);
-        //     let path = PathBuf::from(path_arg);
-        //     if output_err.is_empty() {
-        //         file_output(output, path, true)
-        //     } else {
-        //         file_output(output_err, path, true)
-        //     }
-        // }
         RedirectType::AppendStderr(args) => {
-            let path_arg = String::from(args[0]);
-            let path = PathBuf::from(path_arg);
+            let path = PathBuf::from(String::from(args[0]));
             file_output(output_err, path, true);
             console_output(output);
         }
         RedirectType::AppendStdout(args) => {
-            let path_arg = String::from(args[0]);
-            let path = PathBuf::from(path_arg);
+            let path = PathBuf::from(String::from(args[0]));
             file_output(output, path, true);
             console_output(output_err);
         }
@@ -98,6 +84,7 @@ pub fn separare_redirect_and_args<'a>(args: &'a [&'a str]) -> (&'a [&'a str], Re
     }
 }
 
+/// Implementation of console output.
 fn console_output(mut output: String) {
     if output.is_empty() {
         return;
@@ -111,6 +98,7 @@ fn console_output(mut output: String) {
     }
 }
 
+/// Implementation of file output.
 fn file_output(mut output: String, path: PathBuf, append: bool) {
     output = output.replace("'", "").replace('"', "");
 

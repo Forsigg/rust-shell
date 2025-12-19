@@ -35,9 +35,6 @@ fn main() {
                     None => match execute_external(command, real_args) {
                         Ok((cmd_output, cmderr)) => {
                             output_err = cmderr;
-                            // if !cmderr.is_empty() {
-                            //     handle_output(cmderr, RedirectType::None);
-                            // } 
                             output = cmd_output;
                         }
                         Err(_) => eprintln!("{command}: not found"),
