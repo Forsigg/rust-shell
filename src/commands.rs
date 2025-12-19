@@ -46,7 +46,11 @@ pub fn execute_external(program_name: &str, args: &[&str]) -> Result<String, Com
             let output = command.output().unwrap();
             // let _ = io::stdout().write_all(&output.stdout);
             // let _ = io::stderr().write_all(&output.stderr);
-            Ok(str::from_utf8(&output.stdout).unwrap().to_owned())
+            if !output.stderr.is_empty() {
+                Ok(str::from_utf8(&output.stderr).unwrap().to_owned())
+            } else {
+                Ok(str::from_utf8(&output.stdout).unwrap().to_owned())
+            }
         }
         None => Err(CommandNotFoundError::new(program_name.to_owned())),
     }
