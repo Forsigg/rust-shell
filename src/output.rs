@@ -6,7 +6,7 @@ pub enum RedirectType<'a> {
     Stdout(&'a [&'a str]),
     StdoutOne(&'a [&'a str]),
     StdErr(&'a [&'a str]),
-    Append(&'a [&'a str]),
+    // Append(&'a [&'a str]),
     AppendStdout(&'a [&'a str]),
     AppendStderr(&'a [&'a str]),
 }
@@ -38,15 +38,15 @@ pub fn handle_output(output: String, output_err: String, redirect: RedirectType)
             file_output(output_err, path, false);
             console_output(output);
         }
-        RedirectType::Append(args) => {
-            let path_arg = String::from(args[0]);
-            let path = PathBuf::from(path_arg);
-            if output_err.is_empty() {
-                file_output(output, path, true)
-            } else {
-                file_output(output_err, path, true)
-            }
-        }
+        // RedirectType::Append(args) => {
+        //     let path_arg = String::from(args[0]);
+        //     let path = PathBuf::from(path_arg);
+        //     if output_err.is_empty() {
+        //         file_output(output, path, true)
+        //     } else {
+        //         file_output(output_err, path, true)
+        //     }
+        // }
         RedirectType::AppendStderr(args) => {
             let path_arg = String::from(args[0]);
             let path = PathBuf::from(path_arg);
@@ -82,7 +82,7 @@ pub fn separare_redirect_and_args<'a>(args: &'a [&'a str]) -> (&'a [&'a str], Re
                     match redirect_str.chars().next().unwrap() {
                         '1' => return (real_args, RedirectType::StdoutOne(rest)),
                         '2' => return (real_args, RedirectType::StdErr(rest)),
-                        '>' => return (real_args, RedirectType::Append(rest)),
+                        '>' => return (real_args, RedirectType::AppendStdout(rest)),
                         _ => {}
                     }
                 }
