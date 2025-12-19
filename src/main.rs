@@ -2,7 +2,8 @@ use std::io::{self, Write};
 
 use crate::{
     builtins::{handle_builtin_command, parse_builtin_command},
-    commands::execute_external, output::handle_output,
+    commands::execute_external,
+    output::{handle_output, separare_redirect_and_args},
 };
 
 pub mod builtins;
@@ -22,16 +23,17 @@ fn main() {
                 let command_parts: Vec<&str> = input.split_ascii_whitespace().collect();
                 let command = command_parts[0];
                 let args = &command_parts[1..];
+                let (real_args, redirect) = separare_redirect_and_args(args);
 
                 let mut output = String::new();
 
                 match parse_builtin_command(command) {
                     Some(cmd) => {
-                        if let Some(cmd_output) = handle_builtin_command(cmd, args) {
+                        if let Some(cmd_output) = handle_builtin_command(cmd, real_args) {
                             output.push_str(&cmd_output);
                         }
                     }
-                    None => match execute_external(command, args) {
+                    None => match execute_external(command, real_args) {
                         Ok(cmd_output) => {
                             output.push_str(&cmd_output);
                         }
@@ -39,7 +41,7 @@ fn main() {
                     },
                 }
 
-                handle_output(args, output);
+                handle_output(output, redirect);
             }
 
             Err(e) => println!("error: {e}"),
