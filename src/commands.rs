@@ -36,7 +36,10 @@ pub fn is_external_executable_exist(program_name: &str) -> Option<String> {
     None
 }
 
-pub fn execute_external(program_name: &str, args: &[&str]) -> Result<String, CommandNotFoundError> {
+pub fn execute_external(
+    program_name: &str,
+    args: &[&str],
+) -> Result<(String, String), CommandNotFoundError> {
     match is_external_executable_exist(program_name) {
         Some(_) => {
             let mut command = Command::new(program_name);
@@ -46,11 +49,10 @@ pub fn execute_external(program_name: &str, args: &[&str]) -> Result<String, Com
             let output = command.output().unwrap();
             // let _ = io::stdout().write_all(&output.stdout);
             // let _ = io::stderr().write_all(&output.stderr);
-            if !output.stderr.is_empty() {
-                Ok(str::from_utf8(&output.stderr).unwrap().to_owned())
-            } else {
-                Ok(str::from_utf8(&output.stdout).unwrap().to_owned())
-            }
+            Ok((
+                str::from_utf8(&output.stdout).unwrap().to_owned(),
+                str::from_utf8(&output.stderr).unwrap().to_owned(),
+            ))
         }
         None => Err(CommandNotFoundError::new(program_name.to_owned())),
     }

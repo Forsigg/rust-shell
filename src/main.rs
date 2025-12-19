@@ -23,19 +23,25 @@ fn main() {
                 let command_parts: Vec<&str> = input.split_ascii_whitespace().collect();
                 let command = command_parts[0];
                 let args = &command_parts[1..];
-                let (real_args, redirect) = separare_redirect_and_args(args);
+                let (real_args, mut redirect) = separare_redirect_and_args(args);
 
                 let mut output = String::new();
 
                 match parse_builtin_command(command) {
                     Some(cmd) => {
                         if let Some(cmd_output) = handle_builtin_command(cmd, real_args) {
-                            output.push_str(&cmd_output);
+                            output = cmd_output;
+                            // handle_output(cmd_output, redirect);
                         }
                     }
                     None => match execute_external(command, real_args) {
-                        Ok(cmd_output) => {
-                            output.push_str(&cmd_output);
+                        Ok((cmd_output, cmderr)) => {
+                            if !cmderr.is_empty() {
+                                redirect = output::RedirectType::None;
+                                output = cmderr;
+                            } else {
+                                output = cmd_output;
+                            }
                         }
                         Err(_) => eprintln!("{command}: not found"),
                     },
