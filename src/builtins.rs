@@ -26,36 +26,41 @@ pub fn parse_builtin_command(command_str: &str) -> Option<ShellCommand> {
     }
 }
 
-pub fn handle_builtin_command(cmd: ShellCommand, args: &[&str]) -> Option<String> {
+pub fn handle_builtin_command(cmd: ShellCommand, args: &[&str]) -> (String, String) {
     match cmd {
         ShellCommand::Exit => exit(0),
-        ShellCommand::Echo => Some(echo(args)),
-        ShellCommand::Type => Some(type_(args[0])),
-        ShellCommand::Pwd => Some(pwd()),
+        ShellCommand::Echo => echo(args),
+        ShellCommand::Type => type_(args[0]),
+        ShellCommand::Pwd => pwd(),
         ShellCommand::Cd => cd(args[0].to_owned()),
     }
 }
 
-fn type_(arg: &str) -> String {
+fn type_(arg: &str) -> (String, String) {
+    let mut out = String::new();
+    let mut err = String::new();
     match parse_builtin_command(arg) {
-        Some(_) => format!("{arg} is a shell builtin"),
-
+        Some(_) => {
+            out.push_str(&format!("{arg} is a shell builtin"));
+        },
         None => {
             if let Some(exec_path) = is_external_executable_exist(arg) {
-                format!("{arg} is {exec_path}")
+                out.push_str(&format!("{arg} is {exec_path}"));
             } else {
-                format!("{arg}: not found")
+                err.push_str(&format!("{arg}: not found"));
             }
         }
     }
+
+    (out, err)
 }
 
-fn echo(args: &[&str]) -> String {
+fn echo(args: &[&str]) -> (String, String) {
     let mut output = String::new();
     for arg in args {
         output.push_str(&(format!("{} ", arg)));
     }
-    output
+    (output, String::from(""))
 }
 
 fn get_pwd() -> PathBuf {
@@ -63,12 +68,15 @@ fn get_pwd() -> PathBuf {
     fs::canonicalize(&pwd).unwrap()
 }
 
-fn pwd() -> String {
+fn pwd() -> (String, String) {
     let absolute_pwd = get_pwd();
-    absolute_pwd.to_str().unwrap().to_owned()
+    (absolute_pwd.to_str().unwrap().to_owned(), String::new())
 }
 
-fn cd(mut new_dir: String) -> Option<String> {
+fn cd(mut new_dir: String) -> (String, String) {
+    let out = String::new();
+    let mut err = String::new();
+
     if new_dir == "~" {
         new_dir = env::var("HOME").unwrap();
     }
@@ -79,15 +87,17 @@ fn cd(mut new_dir: String) -> Option<String> {
         path = match fs::canonicalize(path) {
             Ok(p) => p,
             Err(_) => {
-                return Some(format!("cd: {}: No such file or directory", &new_dir));
+                err.push_str(&format!("cd: {}: No such file or directory", &new_dir));
+                return (out, err)
             }
         }
     }
 
     if path.exists() {
         let _ = set_current_dir(path);
-        None
     } else {
-        Some(format!("cd: {}: No such file or directory", &new_dir))
+        err.push_str(&format!("cd: {}: No such file or directory", &new_dir));
     }
+
+    (out, err)
 }

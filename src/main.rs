@@ -3,7 +3,7 @@ use std::io::{self, Write};
 use crate::{
     builtins::{handle_builtin_command, parse_builtin_command},
     commands::execute_external,
-    output::{RedirectType, handle_output, separare_redirect_and_args},
+    output::{handle_output, separare_redirect_and_args},
 };
 
 pub mod builtins;
@@ -26,25 +26,25 @@ fn main() {
                 let (real_args, redirect) = separare_redirect_and_args(args);
 
                 let mut output = String::new();
+                let mut output_err = String::new();
 
                 match parse_builtin_command(command) {
                     Some(cmd) => {
-                        if let Some(cmd_output) = handle_builtin_command(cmd, real_args) {
-                            output = cmd_output;
-                        }
+                        (output, output_err) = handle_builtin_command(cmd, real_args);
                     }
                     None => match execute_external(command, real_args) {
                         Ok((cmd_output, cmderr)) => {
-                            if !cmderr.is_empty() {
-                                handle_output(cmderr, RedirectType::None);
-                            } 
+                            output_err = cmderr;
+                            // if !cmderr.is_empty() {
+                            //     handle_output(cmderr, RedirectType::None);
+                            // } 
                             output = cmd_output;
                         }
                         Err(_) => eprintln!("{command}: not found"),
                     },
                 }
 
-                handle_output(output, redirect);
+                handle_output(output, output_err, redirect);
             }
 
             Err(e) => println!("error: {e}"),

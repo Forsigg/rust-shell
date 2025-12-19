@@ -1,5 +1,6 @@
 use std::{fs::File, io::Write, path::PathBuf};
 
+#[derive(Debug)]
 pub enum RedirectType<'a> {
     None,
     Stdout(&'a [&'a str]),
@@ -7,20 +8,33 @@ pub enum RedirectType<'a> {
     StdErr(&'a [&'a str]),
 }
 
-pub fn handle_output(output: String, redirect: RedirectType) {
+pub fn handle_output(output: String, output_err: String, redirect: RedirectType) {
     match redirect {
-        RedirectType::None => console_output(output),
+        RedirectType::None => {
+            console_output(output);
+            console_output(output_err);
+        }
         RedirectType::Stdout(args) => {
             let path_arg = String::from(args[0]);
             let path = PathBuf::from(path_arg);
-            file_output(output, path)
+            if output_err.is_empty() {
+                file_output(output, path)
+            } else {
+                file_output(output_err, path)
+            }
         }
         RedirectType::StdoutOne(args) => {
             let path_arg = String::from(args[0]);
             let path = PathBuf::from(path_arg);
-            file_output(output, path)
+            file_output(output, path);
+            console_output(output_err);
         }
-        RedirectType::StdErr(_) => {}
+        RedirectType::StdErr(args) => {
+            let path_arg = String::from(args[0]);
+            let path = PathBuf::from(path_arg);
+            file_output(output_err, path);
+            console_output(output);
+        }
     }
 }
 
@@ -35,12 +49,20 @@ pub fn separare_redirect_and_args<'a>(args: &'a [&'a str]) -> (&'a [&'a str], Re
 
             let rest = &args[idx + 1..];
 
-            match args[idx - 1] {
-                "1" => (real_args, RedirectType::StdoutOne(rest)),
-                "2" => (real_args, RedirectType::StdErr(rest)),
-                " " => (real_args, RedirectType::Stdout(rest)),
-                &_ => (real_args, RedirectType::Stdout(rest)),
+            let chars_count = args[idx].len();
+
+            if chars_count == 1 {
+                return (real_args, RedirectType::Stdout(rest));
+            } else if chars_count == 2 {
+                let redirect_str = args[idx].to_owned();
+                match redirect_str.chars().next().unwrap() {
+                    '1' => return (real_args, RedirectType::StdoutOne(rest)),
+                    '2' => return (real_args, RedirectType::StdErr(rest)),
+                    _ => return (real_args, RedirectType::Stdout(rest)),
+                }
             }
+
+            (real_args, RedirectType::Stdout(rest))
         }
     }
 }
