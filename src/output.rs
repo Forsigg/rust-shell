@@ -45,7 +45,13 @@ pub fn separare_redirect_and_args<'a>(args: &'a [&'a str]) -> (&'a [&'a str], Re
     }
 }
 
-fn console_output(output: String) {
+fn console_output(mut output: String) {
+    if output.is_empty() {
+        return;
+    }
+
+    // FIXME: Need to real handle quotes
+    output = output.replace("'", "");
     print!("{}", output);
     if !output.ends_with("\n") {
         println!();
