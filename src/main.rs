@@ -1,22 +1,26 @@
 use crate::{
-    builtins::{handle_builtin_command, parse_builtin_command},
-    commands::execute_external,
-    output::{handle_output, separare_redirect_and_args},
+    autocompletion::ShellHelper, builtins::{handle_builtin_command, parse_builtin_command}, commands::execute_external, output::{handle_output, separare_redirect_and_args}
 };
-use rustyline::{DefaultEditor, Result, error::ReadlineError};
+use rustyline::{Editor, Result, error::ReadlineError};
 
 
 pub mod builtins;
 pub mod commands;
 pub mod output;
+pub mod autocompletion;
 
 fn main() -> Result<()>{
-    let mut editor = DefaultEditor::new()?;
+    let mut editor:Editor<ShellHelper, _> = Editor::new()?;
+    editor.set_helper(Some(ShellHelper{}));
 
     loop {
         let readline = editor.readline("$ ");
         match readline {
             Ok(line) => {
+                if line.is_empty() {
+                    continue
+                }
+
                 let command_parts: Vec<&str> = line.split_ascii_whitespace().collect();
                 let command = command_parts[0];
                 let args = &command_parts[1..];
