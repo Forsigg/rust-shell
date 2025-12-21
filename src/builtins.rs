@@ -35,16 +35,24 @@ pub fn handle_builtin_command(cmd: ShellCommand, args: &[&str]) -> (String, Stri
     match cmd {
         ShellCommand::Exit => exit(0),
         ShellCommand::Echo => echo(args),
-        ShellCommand::Type => type_(args[0]),
+        ShellCommand::Type => type_(args),
         ShellCommand::Pwd => pwd(),
-        ShellCommand::Cd => cd(args[0].to_owned()),
+        ShellCommand::Cd => cd(args),
     }
 }
 
 /// Implementation of `type` command builtin.
-fn type_(arg: &str) -> (String, String) {
+fn type_(args: &[&str]) -> (String, String) {
     let mut out = String::new();
     let mut err = String::new();
+
+    if args.is_empty() {
+        err.push_str("type: need at least one argument");
+        return (out, err)
+    }
+
+    let arg = args[0];
+
     match parse_builtin_command(arg) {
         Some(_) => {
             out.push_str(&format!("{arg} is a shell builtin"));
@@ -83,9 +91,17 @@ fn pwd() -> (String, String) {
 }
 
 /// Implementation of `cd` command builtin.
-fn cd(mut new_dir: String) -> (String, String) {
+fn cd(args: &[&str]) -> (String, String) {
+    let mut new_dir: String;
+
     let out = String::new();
     let mut err = String::new();
+
+    if args.is_empty() {
+        new_dir = env::var("HOME").unwrap();
+    } else {
+        new_dir = args[0].to_owned();
+    }
 
     if new_dir == "~" {
         new_dir = env::var("HOME").unwrap();
