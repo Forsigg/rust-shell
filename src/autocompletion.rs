@@ -13,8 +13,8 @@ impl Completer for ShellHelper {
         _ctx: &rustyline::Context<'_>,
     ) -> rustyline::Result<(usize, Vec<Self::Candidate>)> {
         match &line[..pos] {
-            "ech" => Ok((0, vec!["echo"])),
-            "exi" => Ok((0, vec!["exit"])),
+            "ech" => Ok((0, vec!["echo "])),
+            "exi" => Ok((0, vec!["exit "])),
             _ => Ok((0, vec![])),
         }
     }
