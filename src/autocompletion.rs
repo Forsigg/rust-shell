@@ -22,11 +22,11 @@ impl Completer for ShellHelper {
 impl rustyline::hint::Hinter for ShellHelper {
     type Hint = &'static str;
     fn hint(&self, line: &str, pos: usize, ctx: &rustyline::Context<'_>) -> Option<Self::Hint> {
-        if let Ok((_, c)) = self.complete(line, pos, ctx) {
-            if let Some(&e) = c.get(0) {
-                return Some(&e[pos..]);
-            }
-        }
+        // if let Ok((_, c)) = self.complete(line, pos, ctx) {
+        //     if let Some(&e) = c.get(0) {
+        //         return Some(&e[pos..]);
+        //     }
+        // }
         None
     }
 }
