@@ -1,4 +1,8 @@
-use rustyline::{completion::Completer, completion::Pair, Helper};
+use rustyline::{
+    completion::{Completer, Pair},
+    line_buffer::LineBuffer,
+    Changeset, Helper,
+};
 use std::{collections::HashMap, fs, os::unix::fs::PermissionsExt, path::PathBuf};
 
 /// Helper for autocomplete
@@ -48,16 +52,18 @@ impl CompletionHelper {
 
                     if is_executable
                         && let Some(filename) = entry.path().file_name(){
-                            let filename_str = filename.to_str().unwrap();
+                        let filename_str = filename.to_str().unwrap();
 
-                            let completed = &format!("{} ", filename_str);
+                        let completed = &format!("{} ", filename_str);
 
-                            if filename.len() > 6 {
-                                self.add_completion(&filename_str[..6], completed)
-                            } else {
-                                self.add_completion(&filename_str[..filename_str.len() / 2], completed)
+                        for i in 0..filename.len() {
+                            if i < 3 {
+                                continue;
                             }
+
+                            self.add_completion(&filename_str[..i], completed);
                         }
+                    }
                 }
                 Err(e) => eprintln!("entry error: {:?}", e),
             }
@@ -100,6 +106,11 @@ impl Completer for CompletionHelper {
         matches.sort_by_key(|p| p.display.clone());
 
         Ok((pos - prefix.len(), matches))
+    }
+
+    fn update(&self, line: &mut LineBuffer, start: usize, elected: &str, cl: &mut Changeset) {
+        let end = line.pos();
+        line.replace(start..end, &elected, cl);
     }
 }
 
