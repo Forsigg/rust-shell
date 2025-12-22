@@ -1,24 +1,36 @@
+use std::{env, path::PathBuf};
+
 use crate::{
-    autocompletion::ShellHelper, builtins::{handle_builtin_command, parse_builtin_command}, commands::execute_external, output::{handle_output, separare_redirect_and_args}
+    autocompletion::ShellHelper,
+    builtins::{handle_builtin_command, parse_builtin_command},
+    commands::execute_external,
+    output::{handle_output, separare_redirect_and_args},
 };
-use rustyline::{Editor, Result, error::ReadlineError};
+use rustyline::{error::ReadlineError, Editor, Result};
 
-
+pub mod autocompletion;
 pub mod builtins;
 pub mod commands;
 pub mod output;
-pub mod autocompletion;
 
-fn main() -> Result<()>{
-    let mut editor:Editor<ShellHelper, _> = Editor::new()?;
-    editor.set_helper(Some(ShellHelper{}));
+fn main() -> Result<()> {
+    let mut editor: Editor<ShellHelper, _> = Editor::new()?;
+    let mut helper = ShellHelper::new();
+
+    if let Ok(path) = env::var("PATH") {
+        for p in path.split(":") {
+            helper.add_completions_from_path(PathBuf::from(p));
+        }
+    }
+
+    editor.set_helper(Some(helper));
 
     loop {
         let readline = editor.readline("$ ");
         match readline {
             Ok(line) => {
                 if line.is_empty() {
-                    continue
+                    continue;
                 }
 
                 let command_parts: Vec<&str> = line.split_ascii_whitespace().collect();
@@ -47,11 +59,11 @@ fn main() -> Result<()>{
 
             Err(ReadlineError::Interrupted) => {
                 continue;
-            },
+            }
 
             Err(ReadlineError::Eof) => {
                 break;
-            },
+            }
             Err(e) => {
                 eprintln!("error: {}", e);
                 return Err(e);
