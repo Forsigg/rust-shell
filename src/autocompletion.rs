@@ -1,15 +1,17 @@
 use rustyline::{completion::Completer, completion::Pair, Helper};
 use std::{collections::HashMap, fs, os::unix::fs::PermissionsExt, path::PathBuf};
 
-pub struct ShellHelper {
-    pub completions: HashMap<String, String>,
+/// Helper for autocomplete
+pub struct CompletionHelper {
+    pub completions: HashMap<String, Vec<String>>,
 }
 
-impl ShellHelper {
+/// Implement constructor, add completions
+impl CompletionHelper {
     pub fn new() -> Self {
-        let mut builtin_completions: HashMap<String, String> = HashMap::new();
-        builtin_completions.insert("ech".into(), "echo ".into());
-        builtin_completions.insert("exi".into(), "exit ".into());
+        let mut builtin_completions: HashMap<String, Vec<String>> = HashMap::new();
+        builtin_completions.insert("ech".into(), vec!["echo ".into()]);
+        builtin_completions.insert("exi".into(), vec!["exit ".into()]);
 
         Self {
             completions: builtin_completions,
@@ -17,7 +19,12 @@ impl ShellHelper {
     }
 
     pub fn add_completion(&mut self, k: &str, v: &str) {
-        self.completions.insert(k.into(), v.into());
+        match self.completions.get_mut(k) {
+            Some(vector) => vector.push(v.into()),
+            None => {
+                self.completions.insert(k.into(), vec![v.into()]);
+            }
+        }
     }
 
     pub fn add_completions_from_path(&mut self, path: PathBuf) {
@@ -58,15 +65,16 @@ impl ShellHelper {
     }
 }
 
-impl Default for ShellHelper {
+impl Default for CompletionHelper {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Helper for ShellHelper {}
+impl Helper for CompletionHelper {}
 
-impl Completer for ShellHelper {
+/// Implementation for autocomplete
+impl Completer for CompletionHelper {
     type Candidate = Pair;
 
     fn complete(
@@ -78,29 +86,46 @@ impl Completer for ShellHelper {
         let prefix = &line[..pos];
         let mut matches = Vec::new();
 
-        for (trigger, replacement) in &self.completions {
+        for (trigger, replacements) in &self.completions {
             if trigger.starts_with(prefix) {
-                matches.push(Pair {
-                    display: replacement.clone(),
-                    replacement: replacement.clone(),
-                });
+                for replacement in replacements {
+                    matches.push(Pair {
+                        display: replacement.clone().trim_end().to_string(),
+                        replacement: replacement.clone(),
+                    });
+                }
             }
         }
+
+        matches.sort_by_key(|p| p.display.clone());
 
         Ok((pos - prefix.len(), matches))
     }
 }
 
-impl rustyline::hint::Hinter for ShellHelper {
-    type Hint = &'static str;
+impl rustyline::hint::Hinter for CompletionHelper {
+    type Hint = String;
+
     fn hint(&self, line: &str, pos: usize, ctx: &rustyline::Context<'_>) -> Option<Self::Hint> {
-        // if let Ok((_, c)) = self.complete(line, pos, ctx) {
-        //     if let Some(&e) = c.get(0) {
-        //         return Some(&e[pos..]);
-        //     }
-        // }
         None
+        //     if line.is_empty() {
+        //         return None;
+        //     }
+        //
+        //     let (_, c) = self.complete(line, pos, ctx).ok()?;
+        //
+        //     if c.is_empty() {
+        //         return None;
+        //     }
+        //
+        //     let hint = c
+        //         .iter()
+        //         .map(|pair| pair.display.clone())
+        //         .collect::<Vec<_>>()
+        //         .join(" ");
+        //
+        //     Some(hint)
     }
 }
-impl rustyline::highlight::Highlighter for ShellHelper {}
-impl rustyline::validate::Validator for ShellHelper {}
+impl rustyline::highlight::Highlighter for CompletionHelper {}
+impl rustyline::validate::Validator for CompletionHelper {}

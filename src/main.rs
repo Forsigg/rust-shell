@@ -1,12 +1,12 @@
 use std::{env, path::PathBuf};
 
 use crate::{
-    autocompletion::ShellHelper,
+    autocompletion::CompletionHelper,
     builtins::{handle_builtin_command, parse_builtin_command},
     commands::execute_external,
     output::{handle_output, separare_redirect_and_args},
 };
-use rustyline::{error::ReadlineError, Editor, Result};
+use rustyline::{error::ReadlineError, Config, Editor, Result};
 
 pub mod autocompletion;
 pub mod builtins;
@@ -14,8 +14,13 @@ pub mod commands;
 pub mod output;
 
 fn main() -> Result<()> {
-    let mut editor: Editor<ShellHelper, _> = Editor::new()?;
-    let mut helper = ShellHelper::new();
+    let config = Config::builder()
+        .completion_type(rustyline::CompletionType::List)
+        .tab_stop(4)
+        .auto_add_history(true)
+        .build();
+    let mut editor: Editor<CompletionHelper, _> = Editor::with_config(config)?;
+    let mut helper = CompletionHelper::new();
 
     if let Ok(path) = env::var("PATH") {
         for p in path.split(":") {
